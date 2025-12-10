@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content=device-width, initial-scale=1.0">
+    <title>Pharmacy P&L Statement</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        .report-box {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            max-width: 900px;
+            margin: auto;
+            border: 1px solid #e5e7eb;
+        }
+
+        .pnl-header {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #0f766e;
+            border-bottom: 4px solid #14b8a6;
+            padding-bottom: 12px;
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #374151;
+            margin-top: 35px;
+            margin-bottom: 12px;
+        }
+
+        .pnl-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .subtotal-row {
+            font-weight: 700;
+            background: #e6fffb;
+            border-top: 2px solid #99f6e4;
+            color: #0f766e;
+        }
+
+        .net-income-row {
+            font-weight: 900;
+            background: #dcfce7;
+            border-top: 4px solid #16a34a;
+            font-size: 1.25rem;
+            color: #14532d;
+        }
+
+        .currency {
+            font-variant-numeric: tabular-nums;
+        }
+    </style>
+</head>
+
+<body class="py-5">
+
+    <div class="container">
+        <div class="report-box">
+            <div id="pnlReport">
+                <div class="pnl-header">Loading Financial Report...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Format currency
+        const formatCurrency = (amount) => {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'LKR',
+                minimumFractionDigits: 2
+            }).format(amount);
+        };
+
+        // Generate mock data
+        function generateFinancialData() {
+            const sales = 14500000;
+            const returns = 150000;
+            const netSales = sales - returns;
+
+            const purchases = 8500000;
+            const inventoryStart = 1200000;
+            const inventoryEnd = 1350000;
+            const cogs = purchases + inventoryStart - inventoryEnd;
+
+            const grossProfit = netSales - cogs;
+
+            const salaries = 2500000;
+            const rent = 450000;
+            const utilities = 120000;
+            const depreciation = 30000;
+            const otherOpEx = 50000;
+            const totalOpEx = salaries + rent + utilities + depreciation + otherOpEx;
+
+            const operatingIncome = grossProfit - totalOpEx;
+
+            const interestIncome = 5000;
+            const interestExpense = 10000;
+
+            const earningsBeforeTax = operatingIncome + interestIncome - interestExpense;
+            const incomeTax = earningsBeforeTax * 0.15;
+            const netIncome = earningsBeforeTax - incomeTax;
+
+            return {
+                sales, returns, netSales, purchases, inventoryStart, inventoryEnd,
+                cogs, grossProfit, salaries, rent, utilities, depreciation, otherOpEx,
+                totalOpEx, operatingIncome, interestIncome, interestExpense,
+                incomeTax, netIncome
+            };
+        }
+
+        // Render report
+        function renderReport() {
+            const f = generateFinancialData();
+            const container = document.getElementById("pnlReport");
+
+            container.innerHTML = `
+        <div class="pnl-header d-flex align-items-center">
+            <i data-lucide="line-chart" class="me-2"></i>
+            Profit & Loss Statement
+        </div>
+
+        <div class="text-muted d-flex justify-content-between mb-4">
+            <span><strong>Pharmacy:</strong> The Good Pill</span>
+            <span><strong>Period:</strong> Quarter ending Dec 31, 2025</span>
+        </div>
+
+        <div class="section-title">Revenue</div>
+        <div class="pnl-row"><span>Total Sales Revenue</span><span>${formatCurrency(f.sales)}</span></div>
+        <div class="pnl-row"><span>Less: Sales Returns</span><span class="text-danger">(${formatCurrency(f.returns)})</span></div>
+        <div class="pnl-row subtotal-row"><span>Net Sales</span><span>${formatCurrency(f.netSales)}</span></div>
+
+        <div class="section-title">Cost of Goods Sold (COGS)</div>
+        <div class="pnl-row"><span>Beginning Inventory</span><span>${formatCurrency(f.inventoryStart)}</span></div>
+        <div class="pnl-row"><span>Add: Purchases</span><span>${formatCurrency(f.purchases)}</span></div>
+        <div class="pnl-row"><span>Less: Ending Inventory</span><span class="text-danger">(${formatCurrency(f.inventoryEnd)})</span></div>
+        <div class="pnl-row subtotal-row"><span>Total COGS</span><span>${formatCurrency(f.cogs)}</span></div>
+
+        <div class="pnl-row subtotal-row mt-3" style="font-size: 1.15rem;">
+            <span>Gross Profit</span><span>${formatCurrency(f.grossProfit)}</span>
+        </div>
+
+        <div class="section-title">Operating Expenses</div>
+        <div class="pnl-row"><span>Salaries</span><span>${formatCurrency(f.salaries)}</span></div>
+        <div class="pnl-row"><span>Rent</span><span>${formatCurrency(f.rent)}</span></div>
+        <div class="pnl-row"><span>Utilities</span><span>${formatCurrency(f.utilities)}</span></div>
+        <div class="pnl-row"><span>Depreciation</span><span>${formatCurrency(f.depreciation)}</span></div>
+        <div class="pnl-row"><span>Other Expenses</span><span>${formatCurrency(f.otherOpEx)}</span></div>
+        <div class="pnl-row subtotal-row"><span>Total Operating Expenses</span><span>${formatCurrency(f.totalOpEx)}</span></div>
+
+        <div class="pnl-row subtotal-row mt-3" style="font-size: 1.15rem;">
+            <span>Operating Income</span><span>${formatCurrency(f.operatingIncome)}</span>
+        </div>
+
+        <div class="section-title">Other Income & Expenses</div>
+        <div class="pnl-row"><span>Interest Income</span><span>${formatCurrency(f.interestIncome)}</span></div>
+        <div class="pnl-row"><span>Interest Expense</span>
+            <span class="text-danger">(${formatCurrency(f.interestExpense)})</span>
+        </div>
+        <div class="pnl-row"><span>Earnings Before Tax</span><span>${formatCurrency(f.operatingIncome + f.interestIncome - f.interestExpense)}</span></div>
+        <div class="pnl-row"><span>Income Tax</span><span class="text-danger">(${formatCurrency(f.incomeTax)})</span></div>
+
+        <div class="pnl-row net-income-row mt-3">
+            <span>NET INCOME (PROFIT)</span>
+            <span class="fs-3">${formatCurrency(f.netIncome)}</span>
+        </div>
+        `;
+
+            lucide.createIcons();
+        }
+
+        window.onload = renderReport;
+    </script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

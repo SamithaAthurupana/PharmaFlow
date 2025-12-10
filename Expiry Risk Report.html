@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pharmacy Expiry Risk Report</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            background: #f8fafc;
+            font-family: Inter, sans-serif;
+        }
+
+        /* Cards */
+        .card-box {
+            background: #fff;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, .06);
+            border: 1px solid #eee;
+        }
+
+        /* Metric styles */
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #b91c1c;
+        }
+
+        .metric-label {
+            font-size: .85rem;
+            color: #666;
+        }
+
+        /* Status badge */
+        .status-badge {
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: .7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        /* Status colors */
+        .bg-expired {
+            background: #b91c1c;
+            color: #fff;
+        }
+
+        .bg-critical {
+            background: #fecaca;
+            color: #7f1d1d;
+        }
+
+        .bg-soon {
+            background: #fed7aa;
+            color: #7c2d12;
+        }
+
+        /* Rows */
+        .expiring-soon-row {
+            background: #fffbeb;
+        }
+
+        .expired-row {
+            background: #fef2f2;
+            font-weight: 600;
+        }
+
+        /* Table header */
+        .table thead th {
+            background: #fee2e2;
+            text-transform: uppercase;
+            font-size: .7rem;
+            color: #6b7280;
+        }
+    </style>
+
+</head>
+
+<body class="min-vh-100">
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-dark bg-danger shadow-sm">
+        <div class="container">
+            <div class="d-flex align-items-center">
+                <i data-lucide="calendar-x" class="me-2 text-white"></i>
+                <span class="navbar-brand mb-0 fw-bold">
+                    Expiry Risk Report
+                </span>
+            </div>
+
+            <div id="currentUserId" class="text-white small">
+                Loading User...
+            </div>
+        </div>
+    </nav>
+
+    <main class="container py-4">
+
+        <!-- Header -->
+        <div class="mb-4">
+            <h1 class="fw-bold text-danger d-flex align-items-center">
+                Immediate Action Required
+                <i data-lucide="flame" class="ms-2"></i>
+            </h1>
+            <p class="text-muted">
+                This report tracks all inventory items that are expired or expiring within the next
+                <span id="daysThreshold" class="fw-bold">120</span> days.
+            </p>
+        </div>
+
+        <!-- Metric Cards -->
+        <div class="row g-4 mb-4">
+
+            <div class="col-md-3">
+                <div class="card-box border-start border-4 border-danger">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div id="totalRiskSKUs" class="metric-value">0</div>
+                            <div class="metric-label">Total SKUs at Risk</div>
+                        </div>
+                        <i data-lucide="alert-triangle" class="text-danger"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card-box border-start border-4 border-warning">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div id="totalRiskValue" class="metric-value text-warning">LKR 0.00</div>
+                            <div class="metric-label">Total Value of At-Risk Stock</div>
+                        </div>
+                        <i data-lucide="receipt-text" class="text-warning"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card-box border-start border-4 border-secondary">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div id="expiredCount" class="metric-value text-secondary">0</div>
+                            <div class="metric-label">Total Expired Items</div>
+                        </div>
+                        <i data-lucide="ban" class="text-secondary"></i>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Search + Filters -->
+        <div class="row mb-4">
+
+            <!-- Search -->
+            <div class="col-md-4 mb-2">
+                <div class="input-group">
+                    <span class="input-group-text bg-white">
+                        <i data-lucide="search" width="18"></i>
+                    </span>
+                    <input type="text" id="expirySearch" class="form-control"
+                        placeholder="Search by item name or batch number...">
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="col-md-8 text-md-end">
+                <div id="filterButtons" class="btn-group shadow-sm">
+
+                    <button onclick="updateFilter('All Critical')" class="btn btn-danger active">
+                        All Critical
+                    </button>
+
+                    <button onclick="updateFilter('Expiring Soon')" class="btn btn-outline-danger">
+                        Expiring Soon
+                    </button>
+
+                    <button onclick="updateFilter('Expired')" class="btn btn-outline-danger">
+                        Expired
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Table -->
+        <div class="card-box">
+
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Item Name</th>
+                        <th>Batch/Lot</th>
+                        <th>Stock Qty</th>
+                        <th>Stock Value</th>
+                        <th class="text-center">Days Until Expiry</th>
+                        <th>Risk Status</th>
+                    </tr>
+                </thead>
+
+                <tbody id="expiryTableBody">
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            Loading expiry data...
+                        </td>
+                    </tr>
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </main>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        lucide.createIcons();
+    </script>
+
+    <!-- ✅ KEEP ALL YOUR EXISTING JAVASCRIPT BELOW THIS POINT -->
+    <!-- (Firebase, mock data generator, rendering logic etc remains unchanged)
+PASTE YOUR FULL SCRIPT FROM YOUR ORIGINAL FILE UNDER HERE -->
+</body>
+
+</html>

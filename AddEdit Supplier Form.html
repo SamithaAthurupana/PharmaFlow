@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Add/Edit Supplier (Bootstrap)</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Remix Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.7.0/fonts/remixicon.css" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <style>
+        body {
+            background: #f0f9ff;
+        }
+
+        .card {
+            border-top: 4px solid #0d6efd;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand navbar-dark bg-primary shadow">
+        <div class="container">
+            <span class="navbar-brand">
+                <i class="ri-truck-line me-2"></i>Supplier Management
+            </span>
+            <button class="btn btn-outline-light btn-sm" onclick="handleManagementAction('Supplier List')">
+                <i class="ri-list-unordered"></i> Back to Supplier List
+            </button>
+        </div>
+    </nav>
+
+
+    <main class="container my-5">
+
+        <!-- HEADER -->
+        <div class="mb-4">
+            <h2 id="form-title" class="fw-bold text-primary">Add New Supplier</h2>
+            <p class="text-muted">
+                Record vendors supplying medicines and inventory items.
+            </p>
+        </div>
+
+
+        <!-- FORM CARD -->
+        <div class="card shadow p-4">
+
+            <form id="supplierForm" onsubmit="saveSupplier(event)">
+
+                <!-- GENERAL INFO -->
+                <h5 class="border-bottom pb-2">
+                    <i class="ri-building-line text-primary"></i>
+                    General Information
+                </h5>
+
+                <div class="row g-3 mt-2">
+
+                    <div class="col-md-6">
+                        <label class="form-label">Supplier Name *</label>
+                        <input id="supplierName" name="supplierName" class="form-control" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Registration / VAT</label>
+                        <input id="registrationID" name="registrationID" class="form-control">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Supplier Type</label>
+                        <select id="supplierType" name="supplierType" class="form-select">
+                            <option>Distributor</option>
+                            <option>Manufacturer</option>
+                            <option>Local</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Status</label>
+                        <select id="status" name="status" class="form-select">
+                            <option>Active</option>
+                            <option>Inactive</option>
+                            <option>On Hold</option>
+                        </select>
+                    </div>
+
+                </div>
+
+
+                <!-- CONTACT -->
+                <h5 class="border-bottom pb-2 mt-4">
+                    <i class="ri-contacts-line text-primary"></i>
+                    Contact Details
+                </h5>
+
+                <div class="row g-3 mt-2">
+
+                    <div class="col-md-6">
+                        <label class="form-label">Contact Person *</label>
+                        <input id="contactPerson" name="contactPerson" class="form-control" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Phone *</label>
+                        <input id="phone" name="phone" class="form-control" required>
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label">Email *</label>
+                        <input id="email" name="email" type="email" class="form-control" required>
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label">Address</label>
+                        <textarea id="address" name="address" rows="2" class="form-control"></textarea>
+                    </div>
+
+                </div>
+
+
+                <!-- FINANCIAL -->
+                <h5 class="border-bottom pb-2 mt-4">
+                    <i class="ri-bank-line text-primary"></i>
+                    Financial Info
+                </h5>
+
+                <div class="row g-3 mt-2">
+
+                    <div class="col-md-6">
+                        <label class="form-label">Account Name</label>
+                        <input id="accountName" name="accountName" class="form-control">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Bank Name</label>
+                        <input id="bankName" name="bankName" class="form-control">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Account Number</label>
+                        <input id="accountNumber" name="accountNumber" class="form-control">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Payment Terms</label>
+                        <input id="paymentTerms" name="paymentTerms" class="form-control">
+                    </div>
+
+                </div>
+
+
+                <!-- NOTES -->
+                <div class="mt-4">
+                    <label class="form-label">Internal Notes</label>
+                    <textarea id="notes" name="notes" rows="3" class="form-control"></textarea>
+                </div>
+
+
+                <!-- BUTTONS -->
+                <div class="text-end mt-4">
+
+                    <button type="button" class="btn btn-outline-secondary" onclick="customAlert('Form cleared')">
+                        Cancel / Clear
+                    </button>
+
+                    <button id="submit-button" class="btn btn-primary ms-2" type="submit">
+                        <i class="ri-save-line"></i> Add Supplier
+                    </button>
+
+                </div>
+
+
+            </form>
+        </div>
+
+    </main>
+
+
+    <script>
+        function handleManagementAction(action) {
+            alert("Navigating: " + action);
+        }
+
+        function saveSupplier(e) {
+            e.preventDefault();
+            alert("Form submitted successfully!");
+        }
+    </script>
+
+</body>
+
+</html>

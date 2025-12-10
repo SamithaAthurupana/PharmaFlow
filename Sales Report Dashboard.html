@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Report Dashboard</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Remix Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.7.0/fonts/remixicon.css" rel="stylesheet"/>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            background: #f8f9fa;
+        }
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+        .metric-label {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+        .custom-alert-overlay {
+            position: fixed; top:0; left:0; width:100%; height:100%;
+            display:flex; align-items:center; justify-content:center;
+            background:rgba(0,0,0,0.5); z-index:9999;
+        }
+        .custom-alert-box {
+            background:white; padding:25px; border-radius:10px;
+            width:320px; text-align:center;
+        }
+    </style>
+
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-light bg-white border-bottom shadow-sm">
+    <div class="container-fluid">
+        <span class="navbar-brand mb-0 h1">
+            <i class="ri-bar-chart-box-line text-success me-2"></i>
+            Sales Report & Analytics
+        </span>
+
+        <button class="btn btn-success btn-sm" onclick="customAlert('Exporting report...')">
+            <i class="ri-download-2-line me-1"></i> Export Report
+        </button>
+    </div>
+</nav>
+
+<div class="container my-4">
+
+    <!-- HEADER -->
+    <div class="mb-4">
+        <h3>Sales Performance Overview</h3>
+        <p class="text-muted">Analyze revenue, profit, and transaction performance.</p>
+    </div>
+
+    <!-- DATE FILTER -->
+    <div class="card p-3 mb-4">
+        <div class="row g-3 align-items-end">
+
+            <div class="col-sm-4">
+                <label class="form-label">Start Date</label>
+                <input type="date" id="startDate" class="form-control">
+            </div>
+
+            <div class="col-sm-4">
+                <label class="form-label">End Date</label>
+                <input type="date" id="endDate" class="form-control">
+            </div>
+
+            <div class="col-sm-4">
+                <button class="btn btn-primary w-100" onclick="fetchSalesData()">
+                    <i class="ri-filter-3-line me-1"></i> Apply Filter
+                </button>
+
+                <div id="loadingIndicator" class="text-primary mt-2 small d-none">
+                    <i class="ri-loader-4-line me-1"></i> Loading...
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- METRIC CARDS -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-sm-6 col-md-3">
+            <div class="card p-3">
+                <div class="metric-value" id="totalRevenue">LKR 0.00</div>
+                <div class="metric-label">Total Revenue</div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-md-3">
+            <div class="card p-3">
+                <div class="metric-value" id="totalProfit">LKR 0.00</div>
+                <div class="metric-label">Net Profit</div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-md-3">
+            <div class="card p-3">
+                <div class="metric-value" id="totalTransactions">0</div>
+                <div class="metric-label">Total Transactions</div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-md-3">
+            <div class="card p-3">
+                <div class="metric-value" id="avgTransactionValue">LKR 0.00</div>
+                <div class="metric-label">Avg. Transaction Value</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- CHART + QUICK INFO -->
+    <div class="row g-4">
+
+        <!-- CHART -->
+        <div class="col-lg-8">
+            <div class="card p-3">
+                <canvas id="salesChart" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- QUICK INFO -->
+        <div class="col-lg-4">
+            <div class="card p-3">
+
+                <h5 class="mb-3">Quick Insights</h5>
+
+                <div class="d-flex justify-content-between mb-3">
+                    <span>Avg. Items / Transaction</span>
+                    <span id="avgItemsPerTransaction" class="fw-bold">0.0</span>
+                </div>
+
+                <div class="d-flex justify-content-between mb-3">
+                    <span>Revenue vs Previous Period</span>
+                    <span class="text-success fw-bold">+12.5%</span>
+                </div>
+
+                <h6 class="mt-4">5 Most Recent Sales Dates</h6>
+                <ul class="list-group small" id="transactionList"></ul>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <div class="mt-5 text-muted small text-end">
+        <button class="btn btn-link p-0" onclick="customAlert('Opening documentation...')">
+            <i class="ri-book-open-line me-1"></i> View Documentation
+        </button>
+    </div>
+
+</div>
+
+<!-- CUSTOM ALERT FUNCTION -->
+<script>
+function customAlert(message) {
+    const overlay = document.createElement("div");
+    overlay.className = "custom-alert-overlay";
+
+    const box = document.createElement("div");
+    box.className = "custom-alert-box";
+
+    box.innerHTML = `
+        <p>${message}</p>
+        <button class="btn btn-success btn-sm mt-2">OK</button>
+    `;
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    box.querySelector("button").onclick = () => overlay.remove();
+}
+</script>
+
+<!-- MOCK + CHART + LOGIC -->
+<script>
+// Generate mock data
+function generateMockSalesData(days) {
+    const arr = [];
+    const today = new Date();
+    for (let i = 0; i < days; i++) {
+        const d = new Date(today);
+        d.setDate(today.getDate() - i);
+        arr.push({
+            date: d.toISOString().split("T")[0],
+            revenue: Math.random() * 50000 + 10000,
+            transactions: Math.floor(Math.random() * 40 + 5),
+            itemsSold: Math.floor(Math.random() * 80 + 20),
+            costOfGoods: Math.random() * 15000 + 5000
+        });
+    }
+    return arr.reverse();
+}
+
+let salesChart;
+
+function processAndDisplayData(data) {
+
+    const totalRevenue = data.reduce((a,b)=>a+b.revenue,0);
+    const totalProfit = data.reduce((a,b)=>a+(b.revenue-b.costOfGoods),0);
+    const totalTransactions = data.reduce((a,b)=>a+b.transactions,0);
+    const avgItems = totalTransactions > 0 ?
+        data.reduce((a,b)=>a+b.itemsSold,0) / totalTransactions : 0;
+    const avgValue = totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
+
+    // Update DOM
+    document.getElementById("totalRevenue").textContent = formatLKR(totalRevenue);
+    document.getElementById("totalProfit").textContent = formatLKR(totalProfit);
+    document.getElementById("totalTransactions").textContent = totalTransactions.toLocaleString();
+    document.getElementById("avgTransactionValue").textContent = formatLKR(avgValue);
+    document.getElementById("avgItemsPerTransaction").textContent = avgItems.toFixed(1);
+
+    const labels = data.map(d=>d.date);
+    const revenues = data.map(d=>d.revenue);
+    const profits = data.map(d=>d.revenue - d.costOfGoods);
+
+    renderChart(labels, revenues, profits);
+
+    // Last 5 dates
+    const list = document.getElementById("transactionList");
+    list.innerHTML = "";
+    data.slice(-5).forEach(item=>{
+        const li = document.createElement("li");
+        li.className = "list-group-item d-flex justify-content-between";
+        li.innerHTML = `<span>${item.date}</span><span>${formatLKR(item.revenue)}</span>`;
+        list.appendChild(li);
+    });
+}
+
+function formatLKR(v) {
+    return "LKR " + v.toFixed(2);
+}
+
+function renderChart(labels, revenues, profits){
+    const ctx = document.getElementById("salesChart");
+
+    if(salesChart) salesChart.destroy();
+
+    salesChart = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: "Revenue",
+                    data: revenues,
+                    borderColor: "#198754",
+                    backgroundColor: "rgba(25,135,84,0.1)",
+                    tension: 0.3
+                },
+                {
+                    label: "Profit",
+                    data: profits,
+                    borderColor: "#0d6efd",
+                    tension: 0.3
+                }
+            ]
+        }
+    });
+}
+
+function fetchSalesData(){
+    const s = document.getElementById("startDate").value;
+    const e = document.getElementById("endDate").value;
+
+    if(!s || !e){
+        customAlert("Select start and end dates.");
+        return;
+    }
+
+    document.getElementById("loadingIndicator").classList.remove("d-none");
+
+    const days = 1 + (new Date(e) - new Date(s)) / (1000*60*60*24);
+
+    setTimeout(()=>{
+        processAndDisplayData(generateMockSalesData(days));
+        document.getElementById("loadingIndicator").classList.add("d-none");
+    },900);
+}
+
+window.onload = () => {
+    const today = new Date();
+    const prev = new Date();
+    prev.setDate(today.getDate() - 30);
+
+    document.getElementById("endDate").value = today.toISOString().split("T")[0];
+    document.getElementById("startDate").value = prev.toISOString().split("T")[0];
+
+    fetchSalesData();
+};
+</script>
+
+</body>
+</html>

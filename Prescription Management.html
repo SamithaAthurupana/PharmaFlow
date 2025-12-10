@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>PharmaTrack Prescription Management</title>
+
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+            background-color: #f0f4f8;
+        }
+
+        /* Custom scrollbar for main content */
+        .scrollable-content::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+
+        .scrollable-content::-webkit-scrollbar-thumb {
+            background-color: #60a5fa;
+            border-radius: 4px;
+        }
+
+        .scrollable-content::-webkit-scrollbar-track {
+            background-color: #f0f4f8;
+        }
+
+        .sticky-header th {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background-color: #f8fafc;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Modal show/hide helper (Tailwind handles most styles) */
+        .fade-in {
+            animation: fadeIn .18s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body class="min-h-screen">
+
+    <!-- Firebase Placeholder (kept as your original, no credentials) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        setLogLevel('Debug');
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let db, auth, app;
+        if (firebaseConfig) {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            async function initializeAuth() {
+                try {
+                    if (initialAuthToken) await signInWithCustomToken(auth, initialAuthToken);
+                    else await signInAnonymously(auth);
+                } catch (err) { console.error('Firebase auth failed', err); }
+            }
+            initializeAuth();
+        }
+    </script>
+
+    <!-- Simple customAlert replacement -->
+    <script>
+        function customAlert(message) {
+            const overlay = document.createElement('div');
+            overlay.setAttribute('role', 'dialog');
+            overlay.setAttribute('aria-live', 'polite');
+            overlay.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);z-index:9999';
+            const box = document.createElement('div');
+            box.style.cssText = 'background:white;padding:20px;border-radius:10px;max-width:90%;min-width:260px;text-align:center;box-shadow:0 10px 30px rgba(2,6,23,0.2)';
+            const p = document.createElement('p'); p.style.cssText = 'margin-bottom:14px;font-weight:600;color:#1e3a8a'; p.textContent = message;
+            const btn = document.createElement('button'); btn.className = 'px-4 py-2 bg-blue-600 text-white rounded'; btn.textContent = 'OK';
+            btn.onclick = () => document.body.removeChild(overlay);
+            box.appendChild(p); box.appendChild(btn); overlay.appendChild(box); document.body.appendChild(overlay);
+        }
+    </script>
+
+    <!-- NAVBAR -->
+    <nav class="bg-white shadow">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <i data-lucide="file-text" class="w-6 h-6 text-blue-600 mr-2"></i>
+                    <span class="text-xl font-bold text-blue-700">PharmaTrack Prescriptions</span>
+                </div>
+                <div class="text-gray-500 text-sm flex items-center">
+                    <i data-lucide="user" class="w-4 h-4 mr-1"></i>
+                    Role: <span class="font-semibold ml-1 text-gray-700">Pharmacist / POS</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <header class="mb-6 flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-extrabold text-gray-800">Prescription Queue</h1>
+                <p class="text-gray-500">Manage and dispense medicines based on digital prescriptions.</p>
+            </div>
+        </header>
+
+        <!-- Search & filters -->
+        <div class="bg-white p-6 rounded-xl shadow mb-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Quick Search & Status</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <input id="prescriptionSearch" oninput="filterPrescriptions()"
+                    placeholder="Search by patient name or ID..."
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:col-span-2" />
+                <select id="statusFilter" onchange="filterPrescriptions()"
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">All Statuses</option>
+                    <option value="Pending">Pending (Requires Dispensing)</option>
+                    <option value="Dispensed">Dispensed (Completed)</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Prescription Table -->
+        <div class="bg-white p-4 sm:p-6 rounded-xl shadow">
+            <div class="overflow-x-auto scrollable-content">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="sticky-header">
+                        <tr>
+                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Ref ID</th>
+                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Patient Name</th>
+                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Date</th>
+                            <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Items</th>
+                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Status</th>
+                            <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="prescriptionTableBody" class="bg-white divide-y divide-gray-200"></tbody>
+                </table>
+            </div>
+
+            <div id="noResults" class="text-center py-10 text-gray-500 hidden">
+                <i data-lucide="clipboard-list" class="w-8 h-8 mx-auto mb-2"></i>
+                No prescriptions matched your filter criteria.
+            </div>
+        </div>
+    </main>
+
+    <!-- DETAILS MODAL -->
+    <div id="detailsModal"
+        class="fixed inset-0 bg-gray-600 bg-opacity-75 hidden z-50 flex items-center justify-center p-4"
+        aria-hidden="true" role="dialog" aria-modal="true" onclick="closeDetailsModal(event)">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl p-6 sm:p-8 fade-in"
+            onclick="event.stopPropagation()" role="document">
+            <div class="flex justify-between items-start border-b pb-3 mb-4">
+                <h3 class="text-2xl font-bold text-gray-800">Prescription Details: <span id="modalRefId"
+                        class="text-blue-600">#P001</span></h3>
+                <button onclick="closeDetailsModal()" aria-label="Close" class="text-gray-400 hover:text-gray-600">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+
+            <div id="modalContent" class="space-y-4">
+                <div class="p-4 bg-blue-50 rounded-lg">
+                    <div class="font-semibold text-blue-800 flex items-center mb-1">
+                        <i data-lucide="user-circle" class="w-5 h-5 mr-2"></i> Patient Information
+                    </div>
+                    <p class="text-sm">Name: <span id="patientName" class="font-medium text-gray-700"></span></p>
+                    <p class="text-sm">Doctor: <span id="doctorName" class="font-medium text-gray-700"></span></p>
+                    <p class="text-sm">Date Issued: <span id="dateIssued" class="font-medium text-gray-700"></span></p>
+                </div>
+
+                <h4 class="text-lg font-semibold text-gray-800 mt-2">Dispensing Items</h4>
+                <div class="overflow-x-auto border rounded-lg">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Medicine
+                                </th>
+                                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Required
+                                    Qty</th>
+                                <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Stock
+                                    Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dispensingItemsBody" class="bg-white divide-y divide-gray-200"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="modalActions" class="flex justify-end pt-4 border-t mt-4">
+                <button id="dispenseButton"
+                    class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold transition flex items-center"
+                    onclick="dispensePrescription(document.getElementById('detailsModal').dataset.id)">
+                    <i data-lucide="check-square" class="w-5 h-5 mr-2"></i>
+                    Fulfill / Dispense Prescription
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center py-4 text-xs text-gray-400">
+        PharmaTrack Prescription Module - Developed for Group 05
+    </footer>
+
+    <!-- JS: Logic and data -->
+    <script>
+        // Render lucide icons
+        lucide.createIcons();
+
+        // Mock Prescriptions (kept your sample data, dates kept as examples)
+        let MOCK_PRESCRIPTIONS = [
+            {
+                id: 201, refId: 'P001', patientName: 'Jane Smith', date: '2025-11-17', doctor: 'Dr. A. Khan', status: 'Pending',
+                items: [
+                    { name: 'Amoxicillin 250mg', requiredQty: 30, stockAvailable: 85 },
+                    { name: 'Paracetamol 500mg', requiredQty: 20, stockAvailable: 1500 },
+                    { name: 'Vitamin D (5000 IU)', requiredQty: 90, stockAvailable: 450 }
+                ]
+            },
+            {
+                id: 202, refId: 'P002', patientName: 'Robert Johnson', date: '2025-11-16', doctor: 'Dr. L. Chen', status: 'Pending',
+                items: [
+                    { name: 'Expired Ibuprofen 200mg', requiredQty: 10, stockAvailable: 50 },
+                    { name: 'Cough Syrup (100ml)', requiredQty: 1, stockAvailable: 30 }
+                ]
+            },
+            {
+                id: 203, refId: 'P003', patientName: 'Alice Brown', date: '2025-11-15', doctor: 'Dr. A. Khan', status: 'Dispensed',
+                items: [
+                    { name: 'Bandages Pack (20pcs)', requiredQty: 2, stockAvailable: 700 }
+                ]
+            },
+            {
+                id: 204, refId: 'P004', patientName: 'David Lee', date: '2025-11-18', doctor: 'Dr. S. Sharma', status: 'Pending',
+                items: [
+                    { name: 'Antihistamine Tabs', requiredQty: 60, stockAvailable: 45 }, // Insufficient
+                    { name: 'Paracetamol 500mg', requiredQty: 50, stockAvailable: 1500 }
+                ]
+            },
+        ];
+
+        // --- Helpers ---
+        function getStatusClass(status) {
+            switch (status) {
+                case 'Pending': return 'bg-yellow-100 text-yellow-800';
+                case 'Dispensed': return 'bg-green-100 text-green-800';
+                case 'Cancelled': return 'bg-red-100 text-red-800';
+                default: return 'bg-gray-100 text-gray-800';
+            }
+        }
+
+        function getItemStockStatus(required, available) {
+            if (available === 0) return { status: 'OUT OF STOCK', className: 'bg-red-600 text-white' };
+            if (available < required) return { status: 'Insufficient Stock', className: 'bg-red-500 text-white' };
+            return { status: 'Available', className: 'bg-green-100 text-green-700' };
+        }
+
+        // --- Render Table ---
+        function renderPrescriptionsTable(list) {
+            const tbody = document.getElementById('prescriptionTableBody');
+            tbody.innerHTML = '';
+
+            if (!list.length) {
+                document.getElementById('noResults').classList.remove('hidden');
+                return;
+            }
+            document.getElementById('noResults').classList.add('hidden');
+
+            list.forEach(pres => {
+                const statusClass = getStatusClass(pres.status);
+                const hasPendingItems = pres.items.some(i => getItemStockStatus(i.requiredQty, i.stockAvailable).status !== 'Available');
+
+                const actionButton = pres.status === 'Pending' ? `
+          <button class="text-blue-600 hover:text-blue-800 p-1 rounded-md hover:bg-blue-50 ml-2 font-medium" onclick="viewDetails(${pres.id})" aria-label="View prescription ${pres.refId}">
+            <i data-lucide="microscope" class="w-4 h-4 mr-1 inline-block"></i> View & Dispense
+          </button>
+        ` : `
+          <span class="text-gray-400 flex items-center justify-end">
+            <i data-lucide="check-circle" class="w-4 h-4 mr-1"></i> Completed
+          </span>
+        `;
+
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition duration-100';
+                row.innerHTML = `
+          <td class="px-3 py-3 whitespace-nowrap font-mono text-sm text-blue-600">${pres.refId}</td>
+          <td class="px-3 py-3 whitespace-nowrap text-sm font-semibold text-gray-900">${pres.patientName}</td>
+          <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-500">${pres.date}</td>
+          <td class="px-3 py-3 whitespace-nowrap text-sm text-right text-gray-600">
+            ${pres.items.length} item(s) ${hasPendingItems ? '<i data-lucide="alert-triangle" class="w-4 h-4 inline-block text-red-500 ml-1" title="Stock Issues"></i>' : ''}
+          </td>
+          <td class="px-3 py-3 whitespace-nowrap">
+            <span class="px-2 inline-flex text-xs leading-5 rounded-full font-semibold ${statusClass}">${pres.status}</span>
+          </td>
+          <td class="px-3 py-3 whitespace-nowrap text-right text-sm font-medium">${actionButton}</td>
+        `;
+                tbody.appendChild(row);
+            });
+
+            // re-create lucide icons for newly added nodes
+            lucide.createIcons();
+        }
+
+        // --- Filter ---
+        function filterPrescriptions() {
+            const term = document.getElementById('prescriptionSearch').value.trim().toLowerCase();
+            const status = document.getElementById('statusFilter').value;
+
+            const filtered = MOCK_PRESCRIPTIONS.filter(pres => {
+                const matchesSearch = !term || pres.patientName.toLowerCase().includes(term) || pres.refId.toLowerCase().includes(term);
+                const matchesStatus = !status || pres.status === status;
+                return matchesSearch && matchesStatus;
+            });
+
+            renderPrescriptionsTable(filtered);
+        }
+
+        // --- Modal functions ---
+        function viewDetails(id) {
+            const pres = MOCK_PRESCRIPTIONS.find(p => p.id === id);
+            if (!pres) return customAlert('Prescription not found.');
+
+            const modal = document.getElementById('detailsModal');
+            modal.dataset.id = id;
+            modal.setAttribute('aria-hidden', 'false');
+
+            document.getElementById('modalRefId').textContent = pres.refId;
+            document.getElementById('patientName').textContent = pres.patientName;
+            document.getElementById('doctorName').textContent = pres.doctor;
+            document.getElementById('dateIssued').textContent = pres.date;
+
+            const itemsBody = document.getElementById('dispensingItemsBody');
+            itemsBody.innerHTML = '';
+
+            let stockIssueDetected = false;
+
+            pres.items.forEach(item => {
+                const stk = getItemStockStatus(item.requiredQty, item.stockAvailable);
+                if (stk.status === 'Insufficient Stock' || stk.status === 'OUT OF STOCK') stockIssueDetected = true;
+
+                const tr = document.createElement('tr');
+                tr.className = 'text-sm';
+                tr.innerHTML = `
+           <td class="px-4 py-2 font-medium text-gray-900">${item.name}</td>
+           <td class="px-4 py-2 text-right text-gray-700">${item.requiredQty}</td>
+           <td class="px-4 py-2 text-center"><span class="px-2 py-0.5 inline-flex text-xs leading-5 rounded-full font-semibold ${stk.className}">${stk.status} (${item.stockAvailable} in stock)</span></td>
+        `;
+                itemsBody.appendChild(tr);
+            });
+
+            // Configure dispense button
+            const dispenseBtn = document.getElementById('dispenseButton');
+            if (pres.status === 'Pending') {
+                dispenseBtn.disabled = false;
+                dispenseBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+                if (stockIssueDetected) {
+                    // show warning and disable
+                    dispenseBtn.textContent = 'Stock Issue - Cannot Dispense';
+                    dispenseBtn.disabled = true;
+                    dispenseBtn.classList.add('opacity-60', 'cursor-not-allowed');
+                    // Show one alert to user but not too intrusive if many
+                    setTimeout(() => customAlert('WARNING: This prescription contains items with insufficient stock. Please replenish inventory before dispensing.'), 80);
+                } else {
+                    // set normal state
+                    dispenseBtn.innerHTML = '<i data-lucide="check-square" class="w-5 h-5 mr-2"></i> Fulfill / Dispense Prescription';
+                }
+            } else {
+                dispenseBtn.classList.add('hidden');
+            }
+
+            // Show modal
+            modal.classList.remove('hidden');
+            // ensure icons inside modal are rendered
+            lucide.createIcons();
+            // focus for accessibility
+            dispenseBtn.focus();
+        }
+
+        function closeDetailsModal(event) {
+            // if overlay clicked or explicit close
+            if (!event || event.target.id === 'detailsModal') {
+                const modal = document.getElementById('detailsModal');
+                modal.classList.add('hidden');
+                modal.setAttribute('aria-hidden', 'true');
+            }
+        }
+
+        // close on Esc
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeDetailsModal();
+        });
+
+        // --- Dispense logic ---
+        function dispensePrescription(id) {
+            const pres = MOCK_PRESCRIPTIONS.find(p => p.id == id);
+            if (!pres) return customAlert('Prescription not found.');
+            if (pres.status !== 'Pending') return customAlert('Only pending prescriptions can be dispensed.');
+
+            // Validate stock again
+            const stockIssue = pres.items.some(it => it.stockAvailable < it.requiredQty);
+            if (stockIssue) {
+                return customAlert('Dispense failed: one or more items have insufficient stock.');
+            }
+
+            // Simulate: reduce stock (in real app, update DB)
+            pres.items.forEach(it => {
+                it.stockAvailable = it.stockAvailable - it.requiredQty;
+                if (it.stockAvailable < 0) it.stockAvailable = 0;
+            });
+
+            pres.status = 'Dispensed';
+
+            closeDetailsModal();
+            filterPrescriptions();
+            setTimeout(() => customAlert(`Prescription ${pres.refId} for ${pres.patientName} has been successfully dispensed!`), 80);
+        }
+
+        // --- Init ---
+        window.addEventListener('load', () => {
+            filterPrescriptions();
+            // ensure lucide icons for any dynamic content
+            lucide.createIcons();
+        });
+    </script>
+</body>
+
+</html>

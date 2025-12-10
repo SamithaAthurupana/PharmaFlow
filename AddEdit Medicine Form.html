@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Pharmacy Owner Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- ✅ Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- ✅ Remix Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.7.0/fonts/remixicon.css" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: Inter, sans-serif;
+            background: #f8fafc;
+        }
+
+        .card-shadow {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, .1);
+        }
+
+        .kpi-value {
+            font-size: 2.2rem;
+            font-weight: 800;
+        }
+
+        .action-card {
+            transition: .2s;
+        }
+
+        .action-card:hover {
+            background: #e2e8f0;
+        }
+    </style>
+</head>
+
+<body class="min-vh-100">
+
+    <!-- ================= NAVBAR ================= -->
+    <nav class="navbar navbar-dark bg-dark shadow">
+        <div class="container-fluid">
+            <span class="navbar-brand fw-bold">
+                <i class="ri-monitor-line text-info me-2"></i>
+                PharmaTrack Owner Console
+            </span>
+
+            <div class="text-light small">
+                <i class="ri-crown-line text-warning me-1"></i>
+                Signed in as <strong>Pharmacy Owner</strong>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ================= MAIN ================= -->
+    <main class="container py-5">
+
+        <header class="border-bottom pb-3 mb-5">
+            <h1 class="fw-bold">Business Overview</h1>
+            <p class="text-muted">Key performance indicators for this month.</p>
+        </header>
+
+        <!-- ================= KPI CARDS ================= -->
+        <div class="row g-4 mb-5">
+
+            <!-- Revenue -->
+            <div class="col-md-4">
+                <div class="card p-3 border-top border-primary border-4 card-shadow">
+                    <div class="d-flex justify-content-between">
+                        <p class="text-muted text-uppercase fw-bold">Total Revenue</p>
+                        <i class="ri-line-chart-line text-primary fs-3"></i>
+                    </div>
+                    <div class="kpi-value">LKR 945,520</div>
+                    <small class="text-success">
+                        <i class="ri-arrow-up-line"></i> +12.8% vs last month
+                    </small>
+                </div>
+            </div>
+
+            <!-- Profit -->
+            <div class="col-md-4">
+                <div class="card p-3 border-top border-success border-4 card-shadow">
+                    <div class="d-flex justify-content-between">
+                        <p class="text-muted text-uppercase fw-bold">Gross Profit</p>
+                        <i class="ri-money-dollar-box-line text-success fs-3"></i>
+                    </div>
+                    <div class="kpi-value">LKR 283,656</div>
+                    <small class="text-danger">
+                        <i class="ri-arrow-down-line"></i> -1.5% vs last month
+                    </small>
+                </div>
+            </div>
+
+            <!-- Expenses -->
+            <div class="col-md-4">
+                <div class="card p-3 border-top border-danger border-4 card-shadow">
+                    <div class="d-flex justify-content-between">
+                        <p class="text-muted text-uppercase fw-bold">Total Expenses</p>
+                        <i class="ri-bank-card-line text-danger fs-3"></i>
+                    </div>
+                    <div class="kpi-value">LKR 85,900</div>
+                    <small class="text-danger">
+                        <i class="ri-arrow-up-line"></i> +3.2% Payroll & Utilities
+                    </small>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ================= PANELS ================= -->
+        <div class="row g-4">
+
+            <!-- INVENTORY -->
+            <div class="col-lg-6">
+                <div class="card card-shadow p-4">
+
+                    <h5 class="mb-3">
+                        <i class="ri-archive-line me-1"></i>
+                        Inventory Health Summary
+                    </h5>
+
+                    <ul class="list-group list-group-flush">
+
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span><i class="ri-checkbox-circle-line text-success me-1"></i>Stock Level Compliance</span>
+                            <strong>98.5%</strong>
+                        </li>
+
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span><i class="ri-alert-line text-danger me-1"></i>Expired/Waste (YTD)</span>
+                            <strong class="text-danger">LKR 18,700</strong>
+                        </li>
+
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span><i class="ri-list-check me-1 text-primary"></i>Pending Reorders</span>
+                            <strong>LKR 210,000</strong>
+                        </li>

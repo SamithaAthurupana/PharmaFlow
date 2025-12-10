@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Counter Staff Dashboard</title>
+
+    <!-- Bootstrap CSS -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            background-color: #eef2ff;
+            font-family: Arial, sans-serif;
+        }
+        .card-shadow {
+            box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .1);
+        }
+        .action-button:hover {
+            transform: translateY(-3px);
+        }
+        .custom-alert-bg {
+            position: fixed;
+            top:0; left:0;
+            width:100%; height:100%;
+            background: rgba(0,0,0,0.6);
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            z-index:2000;
+        }
+        .custom-alert-box {
+            background:white;
+            padding:25px;
+            border-radius:10px;
+            width:320px;
+            text-align:center;
+            box-shadow:0 0 20px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-light bg-white shadow-sm px-4">
+        <span class="navbar-brand mb-0 h1">
+            <i data-lucide="scan" class="me-2"></i>
+            Sales Counter Interface
+        </span>
+
+        <span class="text-muted small">
+            <i data-lucide="user-circle" class="me-1"></i>
+            Welcome, <span class="fw-bold text-primary">Staff Member 007</span>
+        </span>
+    </nav>
+
+    <div class="container py-4">
+
+        <!-- Header -->
+        <div class="border-bottom mb-4 pb-2">
+            <h2 class="fw-bold">Ready to Process!</h2>
+            <p class="text-muted">Quick access to POS and daily sales overview.</p>
+        </div>
+
+        <!-- Start Sale CTA -->
+        <div class="mb-4">
+            <button 
+                onclick="initiateNewSale()"
+                class="btn btn-primary w-100 py-4 fs-4 action-button">
+                <i data-lucide="shopping-cart" class="me-2"></i>
+                Start New Sale
+            </button>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="row g-3 mb-4">
+
+            <div class="col-md-4">
+                <div class="card card-shadow border-start border-success border-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <small class="text-muted text-uppercase">Today's Sales</small>
+                            <i data-lucide="circle-dollar-sign" class="text-success"></i>
+                        </div>
+                        <h3 class="fw-bold mt-1">LKR 42,150.00</h3>
+                        <small class="text-muted">Processed so far</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card card-shadow border-start border-warning border-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <small class="text-muted text-uppercase">Transactions</small>
+                            <i data-lucide="hash" class="text-warning"></i>
+                        </div>
+                        <h3 class="fw-bold mt-1">45</h3>
+                        <small class="text-muted">Completed today</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card card-shadow border-start border-info border-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <small class="text-muted text-uppercase">Yesterday</small>
+                            <i data-lucide="clock" class="text-info"></i>
+                        </div>
+                        <h3 class="fw-bold mt-1">LKR 95,680.00</h3>
+                        <small class="text-muted">Reference</small>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Recent Transactions -->
+        <div class="card card-shadow">
+            <div class="card-body">
+
+                <h5 class="mb-3">
+                    <i data-lucide="list-ordered" class="me-2"></i>
+                    Recent Completed Transactions
+                </h5>
+
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Time</th>
+                                <th>Items</th>
+                                <th class="text-end">Amount</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr>
+                                <td>T045</td>
+                                <td>10:45 AM</td>
+                                <td>5 items</td>
+                                <td class="text-end text-success fw-bold">LKR 8,200</td>
+                                <td class="text-center">
+                                    <button onclick="customAlert('Viewing details for T045...')" class="btn btn-link btn-sm">View</button>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>T044</td>
+                                <td>10:30 AM</td>
+                                <td>2 items</td>
+                                <td class="text-end text-success fw-bold">LKR 1,550</td>
+                                <td class="text-center">
+                                    <button onclick="customAlert('Viewing details for T044...')" class="btn btn-link btn-sm">View</button>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>T043</td>
+                                <td>10:15 AM</td>
+                                <td>8 items</td>
+                                <td class="text-end text-success fw-bold">LKR 15,400</td>
+                                <td class="text-center">
+                                    <button onclick="customAlert('Viewing details for T043...')" class="btn btn-link btn-sm">View</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="text-end mt-3">
+                    <button onclick="customAlert('Navigating to full history...')" class="btn btn-outline-primary btn-sm">
+                        View Full Transaction History
+                        <i data-lucide="arrow-right" class="ms-1"></i>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <footer class="text-center mt-4 text-muted small">
+            PharmaTrack Sales Dashboard
+        </footer>
+    </div>
+
+    <!-- Custom Alert -->
+    <script>
+        function customAlert(message) {
+            let bg = document.createElement("div");
+            bg.className = "custom-alert-bg";
+
+            let box = document.createElement("div");
+            box.className = "custom-alert-box";
+
+            let msg = document.createElement("p");
+            msg.innerText = message;
+
+            let btn = document.createElement("button");
+            btn.className = "btn btn-primary btn-sm mt-2";
+            btn.innerText = "OK";
+            btn.onclick = () => document.body.removeChild(bg);
+
+            box.appendChild(msg);
+            box.appendChild(btn);
+            bg.appendChild(box);
+            document.body.appendChild(bg);
+        }
+
+        function initiateNewSale() {
+            customAlert("Navigating to Point-of-Sale (POS) Module...");
+        }
+
+        lucide.createIcons();
+    </script>
+
+    <!-- Bootstrap JS -->
+    <script 
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js">
+    </script>
+</body>
+</html>

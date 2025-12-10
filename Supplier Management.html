@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PharmaTrack Supplier Management</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Remix / Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            background: #f8f9fa;
+            font-family: Arial, sans-serif;
+        }
+
+        .table thead th {
+            position: sticky;
+            top: 0;
+            background: #fff;
+            z-index: 5;
+        }
+
+        .modal-backdrop {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-light bg-white shadow-sm px-4">
+        <span class="navbar-brand mb-0 h1">
+            <i data-lucide="truck" class="me-2"></i>
+            PharmaTrack Supplier Hub
+        </span>
+        <div class="text-muted small">
+            <i data-lucide="user" class="me-1"></i>
+            Role: <strong>Inventory/Manager</strong>
+        </div>
+    </nav>
+
+    <!-- MAIN -->
+    <div class="container my-4">
+
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold">Supplier Relationship Management</h2>
+                <p class="text-muted">Maintain records for all pharmaceutical suppliers.</p>
+            </div>
+
+            <button class="btn btn-danger" onclick="openSupplierModal()">
+                <i data-lucide="user-plus" class="me-1"></i> Add Supplier
+            </button>
+        </div>
+
+
+        <!-- SEARCH + FILTER -->
+        <div class="card p-3 mb-4">
+            <h6 class="fw-bold mb-3">Supplier Quick Search</h6>
+
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <input type="text" id="supplierSearch" class="form-control" placeholder="Search..."
+                        oninput="filterSuppliers()">
+                </div>
+                <div class="col-md-4">
+                    <select id="statusFilter" class="form-select" onchange="filterSuppliers()">
+                        <option value="">All Statuses</option>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                        <option value="Under Review">Under Review</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- TABLE -->
+        <div class="card p-3">
+            <div class="table-responsive" style="max-height: 420px;">
+                <table class="table align-middle table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Name</th>
+                            <th>Contact</th>
+                            <th>Details</th>
+                            <th>Last Order</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="supplierTableBody"></tbody>
+                </table>
+            </div>
+
+            <div id="noResults" class="text-center text-muted py-4 d-none">
+                <i data-lucide="frown" class="mb-2"></i><br>
+                No suppliers match your filter.
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- MODAL -->
+    <div class="modal fade show" id="supplierModal" style="display:none;" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 id="modalTitle" class="modal-title">Add Supplier</h5>
+                    <button class="btn-close" onclick="closeSupplierModal()"></button>
+                </div>
+
+                <form id="supplierForm" class="modal-body">
+
+                    <input type="hidden" id="supplierId">
+
+                    <div class="mb-3">
+                        <label class="form-label">Supplier Name</label>
+                        <input type="text" id="name" required class="form-control">
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Primary Contact</label>
+                            <input type="text" id="contactPerson" required class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Phone</label>
+                            <input type="text" id="phone" required class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" id="email" required class="form-control">
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Agreement Status</label>
+                            <select id="agreementStatus" class="form-select">
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                                <option value="Under Review">Under Review</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Last Order Date</label>
+                            <input type="date" id="lastOrderDate" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary me-2"
+                            onclick="closeSupplierModal()">Cancel</button>
+                        <button type="submit" class="btn btn-danger" id="saveButtonText">Save</button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- FOOTER -->
+    <footer class="text-center py-3 text-muted small">
+        PharmaTrack Supplier Hub — Group 05
+    </footer>
+
+
+    <!-- JS LOGIC -->
+    <script>
+        lucide.createIcons();
+
+        // Mock Data
+        let MOCK_SUPPLIERS = [
+            { id: 1, name: "PharmaSupply Co.", contactPerson: "Alex Chen", phone: "555-0101", email: "alex@pharma.com", agreementStatus: "Active", lastOrderDate: "2025-11-10" },
+            { id: 2, name: "MediCorp Dist.", contactPerson: "Ben Davis", phone: "555-0102", email: "ben@medicorp.com", agreementStatus: "Active", lastOrderDate: "2025-10-25" },
+            { id: 3, name: "Global Drugs", contactPerson: "Chris Lee", phone: "555-0103", email: "chris@global.com", agreementStatus: "Under Review", lastOrderDate: "2025-11-01" }
+        ];
+
+        function statusBadge(status) {
+            if (status === "Active") return `<span class="badge text-bg-success">Active</span>`;
+            if (status === "Inactive") return `<span class="badge text-bg-danger">Inactive</span>`;
+            return `<span class="badge text-bg-warning">Under Review</span>`;
+        }
+
+        function renderSupplierTable(list) {
+            const body = document.getElementById("supplierTableBody");
+            const empty = document.getElementById("noResults");
+
+            body.innerHTML = "";
+            if (!list.length) {
+                empty.classList.remove("d-none");
+                return;
+            }
+            empty.classList.add("d-none");
+
+            list.forEach(s => {
+                body.innerHTML += `
+            <tr>
+                <td>${s.name}</td>
+                <td>${s.contactPerson}</td>
+                <td class="small text-muted">${s.phone}<br>${s.email}</td>
+                <td>${s.lastOrderDate || "N/A"}</td>
+                <td>${statusBadge(s.agreementStatus)}</td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-primary me-1" onclick="editSupplier(${s.id})">
+                        <i data-lucide="square-pen"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteSupplier(${s.id})">
+                        <i data-lucide="trash-2"></i>
+                    </button>
+                </td>
+            </tr>`;
+            });
+
+            lucide.createIcons();
+        }
+
+        function filterSuppliers() {
+            const search = supplierSearch.value.toLowerCase();
+            const status = statusFilter.value;
+
+            const filtered = MOCK_SUPPLIERS.filter(s => {
+                const sMatch =
+                    s.name.toLowerCase().includes(search) ||
+                    s.contactPerson.toLowerCase().includes(search) ||
+                    s.email.toLowerCase().includes(search);
+                const stMatch = !status || s.agreementStatus === status;
+                return sMatch && stMatch;
+            });
+
+            renderSupplierTable(filtered);
+        }
+
+        // Modal Controls
+        function openSupplierModal() {
+            supplierForm.reset();
+            supplierId.value = "";
+            modalTitle.textContent = "Add Supplier";
+            saveButtonText.textContent = "Save";
+            supplierModal.style.display = "block";
+        }
+        function closeSupplierModal() {
+            supplierModal.style.display = "none";
+        }
+
+        function editSupplier(id) {
+            const s = MOCK_SUPPLIERS.find(x => x.id === id);
+            if (!s) return;
+
+            supplierId.value = s.id;
+            name.value = s.name;
+            contactPerson.value = s.contactPerson;
+            phone.value = s.phone;
+            email.value = s.email;
+            agreementStatus.value = s.agreementStatus;
+            lastOrderDate.value = s.lastOrderDate;
+
+            modalTitle.textContent = "Edit Supplier";
+            saveButtonText.textContent = "Update";
+            supplierModal.style.display = "block";
+        }
+
+        supplierForm.addEventListener("submit", e => {
+            e.preventDefault();
+
+            const id = supplierId.value;
+            const data = {
+                name: name.value,
+                contactPerson: contactPerson.value,
+                phone: phone.value,
+                email: email.value,
+                agreementStatus: agreementStatus.value,
+                lastOrderDate: lastOrderDate.value
+            };
+
+            if (id) {
+                const i = MOCK_SUPPLIERS.findIndex(x => x.id == id);
+                MOCK_SUPPLIERS[i] = { ...MOCK_SUPPLIERS[i], ...data };
+            } else {
+                const newId = Math.max(...MOCK_SUPPLIERS.map(s => s.id)) + 1;
+                MOCK_SUPPLIERS.push({ id: newId, ...data });
+            }
+
+            closeSupplierModal();
+            filterSuppliers();
+        });
+
+        function deleteSupplier(id) {
+            if (!confirm("Delete this supplier?")) return;
+            MOCK_SUPPLIERS = MOCK_SUPPLIERS.filter(s => s.id !== id);
+            filterSuppliers();
+        }
+
+        window.onload = filterSuppliers;
+    </script>
+
+</body>
+
+</html>

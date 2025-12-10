@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customer Dashboard</title>
+
+<!-- Bootstrap CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+<style>
+    body { background: #f8f9fa; }
+    .pointer { cursor: pointer; }
+</style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">Dashboard</a>
+    </div>
+</nav>
+
+<div class="container py-4">
+
+    <!-- Search + Filter -->
+    <div class="row mb-3">
+        <div class="col-md-4 mb-2">
+            <input id="searchInput" type="text" class="form-control" placeholder="Search customers...">
+        </div>
+        <div class="col-md-3 mb-2">
+            <select id="statusFilter" class="form-select">
+                <option value="">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+            </select>
+        </div>
+        <div class="col-md-3 mb-2">
+            <button class="btn btn-success w-100" id="addBtn">
+                <i class="bi bi-plus-circle"></i> Add Customer
+            </button>
+        </div>
+    </div>
+
+    <!-- Alert -->
+    <div id="alertBox" class="alert d-none"></div>
+
+    <!-- Table -->
+    <div class="card">
+        <div class="card-header"><strong>Customer List</strong></div>
+        <div class="card-body p-0">
+            <table class="table table-striped mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Status</th>
+                        <th style="width: 120px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="customerTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Customer Modal -->
+<div class="modal fade" id="customerModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 id="modalTitle" class="modal-title">Add Customer</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editIndex">
+                <div class="mb-3">
+                    <label class="form-label">Name</label>
+                    <input id="nameInput" type="text" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Phone</label>
+                    <input id="phoneInput" type="text" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Status</label>
+                    <select id="statusInput" class="form-select">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button id="saveBtn" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+let customers = [
+    { name: "John Doe", phone: "123-456", status: "active" },
+    { name: "Jane Smith", phone: "555-111", status: "inactive" }
+];
+
+const modalEl = document.getElementById('customerModal');
+const modal = new bootstrap.Modal(modalEl);
+
+function renderTable() {
+    const tbody = document.getElementById("customerTableBody");
+    const search = document.getElementById("searchInput").value.toLowerCase();
+    const status = document.getElementById("statusFilter").value;
+    tbody.innerHTML = "";
+
+    customers
+        .filter(c => c.name.toLowerCase().includes(search))
+        .filter(c => !status || c.status === status)
+        .forEach((c, i) => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${c.name}</td>
+                    <td>${c.phone}</td>
+                    <td>${c.status}</td>
+                    <td>
+                        <i class="bi bi-pencil-square text-primary pointer me-2" onclick="editCustomer(${i})"></i>
+                        <i class="bi bi-trash text-danger pointer" onclick="deleteCustomer(${i})"></i>
+                    </td>
+                </tr>`;
+        });
+}
+
+function showAlert(message, type="success") {
+    const alert = document.getElementById("alertBox");
+    alert.className = `alert alert-${type}`;
+    alert.textContent = message;
+    alert.classList.remove("d-none");
+    setTimeout(() => alert.classList.add("d-none"), 2000);
+}
+
+// Add/Edit customer
+document.getElementById("saveBtn").onclick = () => {
+    const index = document.getElementById("editIndex").value;
+    const customer = {
+        name: document.getElementById("nameInput").value,
+        phone: document.getElementById("phoneInput").value,
+        status: document.getElementById("statusInput").value
+    };
+
+    if (!customer.name || !customer.phone) {
+        showAlert("Name and Phone are required", "warning");
+        return;
+    }
+
+    if (index) {
+        customers[index] = customer;
+        showAlert("Customer updated!");
+    } else {
+        customers.push(customer);
+        showAlert("Customer added!");
+    }
+    renderTable();
+    modal.hide();
+};
+
+// Edit
+function editCustomer(i) {
+    const c = customers[i];
+    document.getElementById("modalTitle").textContent = "Edit Customer";
+    document.getElementById("editIndex").value = i;
+    document.getElementById("nameInput").value = c.name;
+    document.getElementById("phoneInput").value = c.phone;
+    document.getElementById("statusInput").value = c.status;
+    modal.show();
+}
+
+// Delete
+function deleteCustomer(i) {
+    if(confirm("Are you sure to delete this customer?")) {
+        customers.splice(i,1);
+        renderTable();
+        showAlert("Customer deleted!", "danger");
+    }
+}
+
+// Event listeners
+document.getElementById("searchInput").addEventListener("input", renderTable);
+document.getElementById("statusFilter").addEventListener("change", renderTable);
+document.getElementById("addBtn").addEventListener("click", () => {
+    document.getElementById("modalTitle").textContent = "Add Customer";
+    document.getElementById("editIndex").value = "";
+    document.getElementById("nameInput").value = "";
+    document.getElementById("phoneInput").value = "";
+    document.getElementById("statusInput").value = "active";
+    modal.show();
+});
+
+// Initial render
+renderTable();
+</script>
+
+</body>
+</html>

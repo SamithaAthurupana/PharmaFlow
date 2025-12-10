@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Management Dashboard</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
+        }
+
+        /* Cards */
+        .card-box {
+            background: #fff;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, .06);
+        }
+
+        /* Metrics */
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #1e40af;
+        }
+
+        .metric-label {
+            font-size: .85rem;
+            color: #6b7280;
+        }
+
+        /* Badge */
+        .status-badge {
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: .7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        /* Status colors */
+        .bg-stock {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .bg-low {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .bg-expiring {
+            background: #ffedd5;
+            color: #9a3412;
+        }
+
+        .bg-expired {
+            background: #dc2626;
+            color: #fff;
+        }
+
+        table th {
+            text-transform: uppercase;
+            font-size: .7rem;
+            color: #6b7280;
+        }
+    </style>
+</head>
+
+<body class="min-vh-100">
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-light bg-white shadow-sm border-bottom">
+        <div class="container">
+            <div class="d-flex align-items-center">
+                <i data-lucide="package-search" class="me-2 text-primary"></i>
+                <span class="navbar-brand fw-bold">Inventory Management</span>
+            </div>
+            <div id="currentUserId" class="small text-muted">Loading User...</div>
+        </div>
+    </nav>
+
+
+    <main class="container py-4">
+
+        <!-- HEADER -->
+        <div class="d-flex flex-column flex-md-row justify-content-between mb-4">
+            <div>
+                <h2 class="fw-bold">Stock Status Report</h2>
+                <p class="text-muted">
+                    Real-time overview of all product stock levels and vital indicators.
+                </p>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button onclick="customAlert('Opening Stock Adjustment Form...')"
+                    class="btn btn-warning btn-sm d-flex align-items-center shadow-sm">
+                    <i data-lucide="settings" class="me-1"></i>
+                    Stock Adjustment
+                </button>
+
+                <button onclick="customAlert('Opening Add New Item Form...')"
+                    class="btn btn-primary btn-sm d-flex align-items-center shadow-sm">
+                    <i data-lucide="plus-circle" class="me-1"></i>
+                    Add New Item
+                </button>
+            </div>
+        </div>
+
+
+        <!-- METRICS -->
+        <div class="row g-4 mb-4">
+
+            <div class="col-6 col-md-2">
+                <div class="card-box border-start border-4 border-primary">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div id="totalItems" class="metric-value">0</div>
+                            <div class="metric-label">Total SKUs</div>
+                        </div>
+                        <i data-lucide="package" class="text-primary"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-6 col-md-4">
+                <div class="card-box border-start border-4 border-success">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div id="totalStockValue" class="metric-value text-success">
+                                LKR 0.00
+                            </div>
+                            <div class="metric-label">Total Stock Value</div>
+                        </div>
+                        <i data-lucide="wallet" class="text-success"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-6 col-md-2">
+                <div class="card-box border-start border-4 border-warning">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div id="lowStockCount" class="metric-value text-warning">0</div>
+                            <div class="metric-label">Low Stock</div>
+                        </div>
+                        <i data-lucide="trending-down" class="text-warning"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-6 col-md-2">
+                <div class="card-box border-start border-4 border-orange">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div id="expiringSoonCount" class="metric-value text-orange">0</div>
+                            <div class="metric-label">Expiring Soon</div>
+                        </div>
+                        <i data-lucide="clock" class="text-warning"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-6 col-md-2">
+                <div class="card-box border-start border-4 border-danger">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div id="expiredCount" class="metric-value text-danger">0</div>
+                            <div class="metric-label">Expired</div>
+                        </div>
+                        <i data-lucide="alert-octagon" class="text-danger"></i>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+        <!-- SEARCH + FILTERS -->
+        <div class="row mb-4">
+
+            <div class="col-md-4 mb-2">
+                <div class="input-group">
+                    <span class="input-group-text bg-white">
+                        <i data-lucide="search" width="16"></i>
+                    </span>
+                    <input type="text" class="form-control" id="inventorySearch"
+                        placeholder="Search by item or supplier...">
+                </div>
+            </div>
+
+            <div class="col-md-8 text-md-end">
+                <div id="filterButtons" class="btn-group shadow-sm">
+                    <button onclick="updateFilter('All')" class="btn btn-primary active">
+                        All
+                    </button>
+
+                    <button onclick="updateFilter('Low Stock')" class="btn btn-outline-primary">
+                        Low Stock
+                    </button>
+
+                    <button onclick="updateFilter('Expiring Soon')" class="btn btn-outline-primary">
+                        Expiring Soon
+                    </button>
+
+                    <button onclick="updateFilter('Expired')" class="btn btn-outline-primary">
+                        Expired
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+
+        <!-- TABLE -->
+        <div class="card-box">
+
+            <table class="table table-hover mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th>Item Name</th>
+                        <th>Supplier</th>
+                        <th class="text-end">Stock Level</th>
+                        <th class="text-end">Unit Price</th>
+                        <th>Reorder Level</th>
+                        <th>Expiry</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody id="inventoryTableBody">
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            Loading inventory data...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>
+    </main>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+
+    <!-- ✅ KEEP YOUR EXISTING FIREBASE + LOGIC SCRIPT FROM YOUR ORIGINAL FILE BELOW -->
+</body>
+
+</html>

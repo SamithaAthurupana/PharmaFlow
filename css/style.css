@@ -1,0 +1,103 @@
+/* ----------
+color, font, variable-------- */
+:root{
+    --c-primary: #975af9;
+    --c-secondry:#46a7f8;
+    --c-background: #e6e6e6;
+    --c-dark: #2d2d2d;
+    --c-black: #1a1919;
+}
+
+body{
+    font-size: 16px;
+    line-height: 1.6;
+}
+.h1 .h2 .h3 .h4 .h5 .h6 {
+    font-weight: 600;
+}
+a{
+    text-decoration: none;
+    color:var(--c-primary)
+}
+a:hover{
+    color: var(--c-secondry);
+}
+.section-padding{
+    padding-top: 120px;
+    padding-bottom: 120px;
+}
+.img{
+    max-width: 100%;
+    height: auto;
+}
+/* ----------
+Button css setup-------- */
+.btn{
+    font-weight: 600 !important;
+}
+.btn-primary{
+    background-color: var(--c-primary) !important;
+}
+.btn-primary:hover{
+    background-color: var(--c-secondry) !important;
+}
+
+.btn-light{
+    background-color: var(--c-background) !important;
+}
+
+/* ----------
+Nav bar css setup-------- */
+.navbar{
+    font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+    font-size: 16px;
+    font-weight: 500;
+}
+.navbar-dark{
+    background-color: var(--c-black);
+}
+
+/* ----------
+Hero css setup-------- */
+#Hero{
+    background: url(https://bsmedia.business-standard.com/_media/bs/img/article/2024-07/24/full/1721806391-6188.jpg);
+    background-position: top;
+    margin-top: -80px;
+}
+.herotext{
+    font-size: 85px;
+    font-weight: 700;
+}
+
+/* ----------
+About css setup-------- */
+.brand-title{
+    font-size: 63px;
+    font-weight: 750;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+}
+.brand-p{
+    font-size: 23px;
+    font-weight: 400;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+}
+.brand-title-light{
+    font-size: 53px;
+    font-weight: 650;
+    color: var(--c-background);
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+}
+
+/* ----------
+iconbox css setup-------- */
+.iconbox{
+    background: var(--c-background);
+    color: var(--c-primary);
+    width: 65px;
+    height: 65px;
+    align-items: center;
+    font-size: 35px;
+}
+
+/* ----------
+footer css setup-------- */

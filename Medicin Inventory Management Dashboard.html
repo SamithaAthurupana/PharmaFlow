@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PharmaTrack Inventory Management</title>
+
+    <!-- ✅ Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- ✅ Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f0f4f8;
+        }
+
+        .sticky-header th {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: #f8fafc;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
+        }
+
+        /* Status badge styles */
+        .badge-expired {
+            background: #dc2626 !important
+        }
+
+        .badge-expiring {
+            background: #facc15 !important;
+            color: #000 !important
+        }
+
+        .badge-good {
+            background: #dcfce7 !important;
+            color: #166534 !important
+        }
+
+        .badge-out {
+            background: #b91c1c !important
+        }
+
+        .badge-reorder {
+            background: #f59e0b !important
+        }
+
+        .badge-low {
+            background: #fecaca !important;
+            color: #991b1b !important
+        }
+
+        .badge-ok {
+            background: #dcfce7 !important;
+            color: #166534 !important
+        }
+    </style>
+</head>
+
+<body class="min-vh-100">
+
+    <!-- ✅ NAVBAR -->
+    <nav class="navbar navbar-light bg-white shadow-sm">
+        <div class="container-fluid">
+            <span class="navbar-brand fw-bold text-success">
+                <i data-lucide="boxes" class="me-2"></i>
+                PharmaTrack Inventory
+            </span>
+
+            <div class="small">
+                <i data-lucide="user" class="me-1"></i>
+                Role: <b>Inventory Staff</b>
+                <button class="btn btn-sm btn-danger ms-3" onclick="customAlert('Logging out...')">
+                    Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+
+    <main class="container-fluid py-4">
+
+        <!-- HEADER -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold">Medicine Inventory Overview</h2>
+                <p class="text-muted">Search, update, and track all medicines in your inventory.</p>
+            </div>
+
+            <button class="btn btn-success btn-lg" onclick="openMedicineModal()">
+                <i data-lucide="plus" class="me-1"></i>
+                Add New Medicine
+            </button>
+        </div>
+
+
+        <!-- FILTERS -->
+        <div class="card shadow-sm p-4 mb-4">
+
+            <h5 class="fw-semibold mb-3">Inventory Quick Filters</h5>
+
+            <div class="row g-3">
+
+                <div class="col-md-3">
+                    <input type="text" id="inventorySearch" class="form-control"
+                        placeholder="Search by name, code or supplier" oninput="filterInventory()">
+                </div>
+
+                <div class="col-md-3">
+                    <select id="categoryFilter" class="form-select" onchange="filterInventory()">
+                        <option value="">All Categories</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <select id="stockFilter" class="form-select" onchange="filterInventory()">
+                        <option value="">All Stock</option>
+                        <option value="Low">Low Stock (&lt;50)</option>
+                        <option value="Reorder">Below Reorder Level</option>
+                        <option value="Sufficient">Sufficient</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <select id="expiryFilter" class="form-select" onchange="filterInventory()">
+                        <option value="">All Expiry</option>
+                        <option value="Expired">Expired</option>
+                        <option value="ExpiringSoon">Expiring Soon (&lt;90 days)</option>
+                        <option value="Good">Good</option>
+                    </select>
+                </div>
+
+            </div>
+        </div>
+
+
+        <!-- ✅ TABLE -->
+        <div class="card shadow-sm p-3">
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="sticky-header table-light">
+                        <tr>
+                            <th>Name (Code)</th>
+                            <th>Category</th>
+                            <th class="text-end">Stock</th>
+                            <th class="text-end">Reorder</th>
+                            <th class="text-end">Price</th>
+                            <th>Expiry</th>
+                            <th>Supplier</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="inventoryTableBody"></tbody>
+
+                </table>
+            </div>
+
+            <div id="noResults" class="text-center py-4 text-muted d-none">
+                <i data-lucide="frown" class="mb-2"></i><br>
+                No medicines matched your filter criteria.
+            </div>
+
+        </div>
+
+
+    </main>
+
+
+    <!-- ✅ MODAL -->
+    <div class="modal fade" id="medicineModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content p-3">
+
+                <h3 id="modalTitle" class="fw-bold mb-3">Add New Medicine</h3>
+
+                <form id="medicineForm">
+                    <input type="hidden" id="medicineId">
+
+                    <div class="row g-3 mb-3">
+
+                        <div class="col-md-6">
+                            <label class="form-label">Medicine</label>
+                            <input id="name" required type="text" class="form-control">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Stock Code</label>
+                            <input id="code" required type="text" class="form-control">
+                        </div>
+
+                    </div>
+
+                    <div class="row g-3 mb-3">
+
+                        <div class="col-md-6">
+                            <label class="form-label">Category</label>
+                            <select id="category" required class="form-select">
+                                <option value="">Select</option>
+                                <option>Pain Relief</option>
+                                <option>Antibiotic</option>
+                                <option>Cold & Flu</option>
+                                <option>Vitamins</option>
+                                <option>First Aid</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Unit Price</label>
+                            <input type="number" id="price" step="0.01" required class="form-control">
+                        </div>
+
+                    </div>
+
+                    <div class="row g-3 mb-4">
+
+                        <div class="col-md-4">
+                            <label class="form-label">Stock</label>
+                            <input type="number" id="stock" required class="form-control">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Reorder</label>
+                            <input type="number" id="reorderLevel" required class="form-control">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Expiry</label>
+                            <input type="date" id="expiryDate" required class="form-control">
+                        </div>
+
+                    </div>
+
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+
+                        <button type="submit" class="btn btn-success">
+                            <i data-lucide="save" class="me-1"></i>
+                            <span id="saveButtonText">Save Medicine</span>
+                        </button>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+
+    <!-- FOOTER -->
+    <footer class="text-center small text-muted py-3">
+        PharmaTrack Inventory – Developed for Group 05
+    </footer>
+
+
+    <script>
+        lucide.createIcons();
+
+        /* --- INVENTORY DATA --- */
+
+        let MOCK_INVENTORY = [
+            { id: 101, name: 'Paracetamol 500mg', code: 'PRM500', category: 'Pain Relief', stock: 1500, reorderLevel: 100, price: 0.50, expiryDate: '2026-10-30', supplier: 'PharmaSupply Co.' },
+            { id: 102, name: 'Amoxicillin 250mg', code: 'AMX250', category: 'Antibiotic', stock: 85, reorderLevel: 150, price: 1.25, expiryDate: '2024-12-05', supplier: 'MediCorp' },
+            { id: 103, name: 'Cough Syrup', code: 'CGSY100', category: 'Cold & Flu', stock: 30, reorderLevel: 50, price: 8.99, expiryDate: '2025-01-15', supplier: 'Global Drugs' },
+            { id: 104, name: 'Vitamin C tabs', code: 'VITC100', category: 'Vitamins', stock: 1200, reorderLevel: 200, price: 4.50, expiryDate: '2026-06-20', supplier: 'PharmaSupply Co.' },
+            { id: 105, name: 'Expired Ibu', code: 'IBP200', category: 'Pain Relief', stock: 50, reorderLevel: 80, price: .75, expiryDate: '2024-01-01', supplier: 'MediCorp' },
+            { id: 106, name: 'Bandages Pack', code: 'BND20', category: 'First Aid', stock: 700, reorderLevel: 100, price: 3.2, expiryDate: '2027-03-01', supplier: 'FirstAid Inc.' }
+        ];
+
+        const modal = new bootstrap.Modal(document.getElementById('medicineModal'));
+
+        /* --- STATUS HELPERS --- */
+
+        function getExpiryStatus(date) {
+            const diff = new Date(date) - new Date();
+            const limit = 90 * 24 * 60 * 60 * 1000;
+
+            if (diff < 0) return { status: 'Expired', class: 'badge badge-expired' };
+            if (diff <= limit) return { status: 'Expiring Soon', class: 'badge badge-expiring' };
+            return { status: 'Good', class: 'badge badge-good' };
+        }
+
+        function getStockStatus(stock, re) {
+            if (stock <= 0) return { status: 'OUT', class: 'badge badge-out' };
+            if (stock < re) return { status: 'REORDER', class: 'badge badge-reorder' };
+            if (stock < 50) return { status: 'LOW', class: 'badge badge-low' };
+            return { status: 'OK', class: 'badge badge-ok' };
+        }
+
+
+        /* --- RENDER --- */
+
+        function renderInventoryTable(list) {
+            const body = document.getElementById("inventoryTableBody");
+            body.innerHTML = "";
+
+            document.getElementById("noResults")
+                .classList.toggle("d-none", list.length !== 0);
+
+            list.forEach(item => {
+                const exp = getExpiryStatus(item.expiryDate);
+                const stock = getStockStatus(item.stock, item.reorderLevel);
+
+                body.insertAdjacentHTML("beforeend", `
+        <tr>
+            <td><b>${item.name}</b><br><small>${item.code}</small></td>
+            <td>${item.category}</td>
+            <td class="text-end"><span class="${stock.class}">${item.stock}</span></td>
+            <td class="text-end">${item.reorderLevel}</td>
+            <td class="text-end text-success">$${item.price.toFixed(2)}</td>
+            <td><span class="${exp.class}">${item.expiryDate}</span></td>
+            <td>${item.supplier}</td>
+            <td class="text-end">
+                <button class="btn btn-sm btn-outline-primary" onclick="editMedicine(${item.id})">
+                    <i data-lucide="square-pen"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger ms-1" onclick="deleteMedicine(${item.id})">
+                    <i data-lucide="trash-2"></i>
+                </button>
+            </td>
+        </tr>
+        `);
+            });
+
+            lucide.createIcons();
+        }
+
+
+        /* --- FILTER --- */
+
+        function filterInventory() {
+            const s = inventorySearch.value.toLowerCase();
+            const c = categoryFilter.value;
+            const st = stockFilter.value;
+            const ex = expiryFilter.value;
+
+            const filtered = MOCK_INVENTORY.filter(i => {
+                if (!(i.name + i.code + i.supplier).toLowerCase().includes(s)) return false;
+                if (c && i.category !== c) return false;
+
+                if (st === 'Low' && !(i.stock < 50 && i.stock > 0)) return false;
+                if (st === 'Reorder' && !(i.stock < i.reorderLevel)) return false;
+                if (st === 'Sufficient' && !(i.stock >= 50 && i.stock >= i.reorderLevel)) return false;
+
+                const e = getExpiryStatus(i.expiryDate).status;
+                if (ex === 'Expired' && e !== 'Expired') return false;
+                if (ex === 'ExpiringSoon' && e !== 'Expiring Soon') return false;
+                if (ex === 'Good' && e !== 'Good') return false;
+
+                return true;
+            });
+
+            renderInventoryTable(filtered);
+        }
+
+
+        /* --- MODAL --- */
+
+        function openMedicineModal() {
+            medicineForm.reset();
+            medicineId.value = '';
+            saveButtonText.innerText = 'Save Medicine';
+            modal.show();
+        }
+
+        function editMedicine(id) {
+            const i = MOCK_INVENTORY.find(x => x.id === id);
+            if (!i) return;
+
+            medicineId.value = i.id;
+            name.value = i.name;
+            code.value = i.code;
+            category.value = i.category;
+            price.value = i.price;
+            stock.value = i.stock;
+            reorderLevel.value = i.reorderLevel;
+            expiryDate.value = i.expiryDate;
+
+            saveButtonText.innerText = 'Update Medicine';
+            modal.show();
+        }
+
+        medicineForm.onsubmit = e => {
+            e.preventDefault();
+
+            const i = {
+                id: medicineId.value || Date.now(),
+                name: name.value,
+                code: code.value,
+                category: category.value,
+                stock: +stock.value,
+                reorderLevel: +reorderLevel.value,
+                price: +price.value,
+                expiryDate: expiryDate.value,
+                supplier: "Default Supplier"
+            };
+
+            if (medicineId.value) {
+                MOCK_INVENTORY = MOCK_INVENTORY.map(x => x.id == i.id ? i : x);
+                customAlert('Medicine updated');
+            } else {
+                MOCK_INVENTORY.push(i);
+                customAlert('Medicine added');
+            }
+
+            modal.hide();
+            filterInventory();
+        };
+
+        function deleteMedicine(id) {
+            MOCK_INVENTORY = MOCK_INVENTORY.filter(i => i.id !== id);
+            customAlert("Medicine deleted");
+            filterInventory();
+        }
+
+        window.onload = () => {
+
+            const set = new Set(MOCK_INVENTORY.map(i => i.category));
+            set.forEach(c => {
+                categoryFilter.innerHTML += `<option>${c}</option>`;
+            });
+
+            filterInventory();
+        }
+
+        function customAlert(msg) {
+            alert(msg);
+        }
+    </script>
+
+</body>
+
+</html>

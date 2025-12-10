@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pharmacy Owner Dashboard - Overview</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Remix Icon -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.7.0/fonts/remixicon.css" rel="stylesheet" />
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        .card-shadow {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+                0 4px 6px -4px rgba(0, 0, 0, 0.1);
+        }
+
+        .kpi-value {
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: #1e293b;
+        }
+
+        .kpi-title {
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+        }
+
+        .action-link {
+            transition: 0.2s;
+        }
+
+        .action-link:hover {
+            background-color: #e2e8f0;
+        }
+    </style>
+</head>
+
+<body class="min-vh-100">
+
+    <!-- ============================
+       FIREBASE BLOCK
+============================ -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        setLogLevel("debug");
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let app;
+        let db;
+        let auth;
+
+        if (firebaseConfig) {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+
+            async function initializeAuth() {
+                try {
+                    if (initialAuthToken) {
+                        await signInWithCustomToken(auth, initialAuthToken);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                } catch (error) {
+                    console.error("Firebase authentication failed:", error);
+                }
+            }
+            initializeAuth();
+        }
+    </script>
+
+    <!-- ============================
+       CUSTOM ALERT
+============================ -->
+    <script>
+        function customAlert(message) {
+            const bg = document.createElement("div");
+            bg.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); display: flex; justify-content: center;
+            align-items: center; z-index: 1000;
+        `;
+
+            const box = document.createElement("div");
+            box.style.cssText = `
+            background: white; padding: 25px; border-radius: 12px;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.2); text-align: center;
+        `;
+
+            const text = document.createElement("p");
+            text.textContent = message;
+            text.style = "font-size: 1.1rem; font-weight:600; color:#0f172a;";
+
+            const btn = document.createElement("button");
+            btn.textContent = "OK";
+            btn.className = "btn btn-dark px-4 mt-3";
+            btn.onclick = () => document.body.removeChild(bg);
+
+            box.append(text, btn);
+            bg.append(box);
+            document.body.append(bg);
+        }
+
+        function handleManagementAction(a) {
+            customAlert(`Navigating to: ${a}`);
+        }
+    </script>
+
+    <!-- ============================
+       NAVBAR
+============================ -->
+    <nav class="navbar navbar-dark bg-dark shadow-sm py-3">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="#">
+                <i data-lucide="monitor" class="me-2 text-info"></i>
+                PharmaTrack Owner Console
+            </a>
+
+            <div class="text-light small d-flex align-items-center">
+                <i data-lucide="crown" class="me-1 text-warning"></i>
+                Signed in as <span class="fw-semibold text-white ms-1">Pharmacy Owner</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============================
+       MAIN CONTENT
+============================ -->
+    <main class="container py-5">
+
+        <!-- HEADER -->
+        <header class="pb-3 border-bottom mb-5">
+            <h1 class="fw-bold display-6 text-dark">Business Overview</h1>
+            <p class="text-secondary">Key performance indicators for the current month's operations.</p>
+        </header>
+
+        <!-- KPI CARDS -->
+        <div class="row g-4 mb-5">
+
+            <!-- Revenue -->
+            <div class="col-md-4">
+                <div class="bg-white p-4 rounded card-shadow border-top border-4" style="border-color:#0ea5e9;">
+                    <div class="d-flex justify-content-between">
+                        <p class="kpi-title">Total Revenue (MTD)</p>
+                        <i data-lucide="trending-up" class="text-info"></i>
+                    </div>
+                    <p class="kpi-value mt-2">LKR 945,520</p>
+                    <p class="small mt-3">
+                        <span class="text-success fw-bold"><i data-lucide="arrow-up-right"></i> +12.8%</span>
+                        <span class="text-muted">vs. Last Month</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Profit -->
+            <div class="col-md-4">
+                <div class="bg-white p-4 rounded card-shadow border-top border-4" style="border-color:#10b981;">
+                    <div class="d-flex justify-content-between">
+                        <p class="kpi-title">Gross Profit (MTD)</p>
+                        <i data-lucide="dollar-sign" class="text-success"></i>
+                    </div>
+                    <p class="kpi-value mt-2">LKR 283,656</p>
+                    <p class="small mt-3">
+                        <span class="text-danger fw-bold"><i data-lucide="arrow-down-right"></i> -1.5%</span>
+                        <span class="text-muted">vs. Last Month</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Expenses -->
+            <div class="col-md-4">
+                <div class="bg-white p-4 rounded card-shadow border-top border-4" style="border-color:#ef4444;">
+                    <div class="d-flex justify-content-between">
+                        <p class="kpi-title">Total Expenses (MTD)</p>
+                        <i data-lucide="credit-card" class="text-danger"></i>
+                    </div>
+                    <p class="kpi-value mt-2">LKR 85,900</p>
+                    <p class="small mt-3">
+                        <span class="text-danger fw-bold"><i data-lucide="arrow-up-right"></i> +3.2%</span>
+                        <span class="text-muted">Payroll & Utilities</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- INVENTORY & ADMIN -->
+        <div class="row g-4">
+
+            <!-- Inventory -->
+            <div class="col-lg-6">
+                <div class="bg-white p-4 rounded card-shadow">
+                    <h4 class="fw-semibold text-dark mb-3 d-flex align-items-center">
+                        <i data-lucide="package" class="me-2 text-secondary"></i>
+                        Inventory Health Summary
+                    </h4>
+
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span><i data-lucide="check-square" class="text-success me-2"></i> Stock Level
+                                Compliance</span>
+                            <strong>98.5%</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span><i data-lucide="alert-triangle" class="text-danger me-2"></i> Total Expired/Wastage
+                                (YTD)</span>
+                            <strong class="text-danger">LKR 18,700</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span><i data-lucide="list-checks" class="text-info me-2"></i> Pending Reorder Value</span>
+                            <strong>LKR 210,000</strong>
+                        </li>
+                    </ul>
+
+                    <button onclick="handleManagementAction('Full Inventory Report')"
+                        class="btn btn-info text-white mt-3 w-100">
+                        View Comprehensive Inventory Report
+                    </button>
+                </div>
+            </div>
+
+            <!-- Admin Controls -->
+            <div class="col-lg-6">
+                <div class="bg-white p-4 rounded card-shadow">
+                    <h4 class="fw-semibold text-dark mb-3 d-flex align-items-center">
+                        <i data-lucide="settings" class="me-2 text-secondary"></i>
+                        Administrative Controls
+                    </h4>
+
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div onclick="handleManagementAction('Manage Staff Accounts')"
+                                class="action-link text-center p-3 bg-light rounded">
+                                <i data-lucide="users" class="mb-1"></i>
+                                <p class="small fw-semibold">Staff Accounts</p>
+                            </div>
+                        </div>
+
+                        <div class="col-6">
+                            <div onclick="handleManagementAction('View Detailed Financial Reports')"
+                                class="action-link text-center p-3 bg-light rounded">
+                                <i data-lucide="file-text" class="mb-1"></i>
+                                <p class="small fw-semibold">Financial Reports</p>
+                            </div>
+                        </div>
+
+                        <div class="col-6">
+                            <div onclick="handleManagementAction('Security & Audit')"
+                                class="action-link text-center p-3 bg-light rounded">
+                                <i data-lucide="shield" class="mb-1"></i>
+                                <p class="small fw-semibold">Security & Audit</p>
+                            </div>
+                        </div>
+
+                        <div class="col-6">
+                            <div onclick="handleManagementAction('Set Pricing & Margins')"
+                                class="action-link text-center p-3 bg-light rounded">
+                                <i data-lucide="tag" class="mb-1"></i>
+                                <p class="small fw-semibold">Pricing Structure</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- FOOTER -->
+        <footer class="text-center mt-5 text-secondary small">
+            PharmaTrack Owner Console - Confidential Business Data.
+        </footer>
+
+    </main>
+
+    <script>
+        lucide.createIcons();
+    </script>
+
+</body>
+
+</html>
